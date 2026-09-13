@@ -28,7 +28,7 @@ jobs:
         working-directory: xjspobot
         run: |
           set +e
-          timeout --signal=INT --kill-after=30s 1h .venv/bin/python sport_bot.py
+          timeout --signal=INT --kill-after=30s 1h python sport_bot.py
           code=$?
           if [ "$code" -eq 124 ]; then
             echo "xjspobot ran for 1 hour and was stopped as expected."
@@ -36,15 +36,6 @@ jobs:
           fi
           exit "$code"
 
-      - name: Install xjmimotion dependencies
-        working-directory: xjmimotion
-        run: |
-          python -m venv .venv
-          .venv/bin/python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then
-            .venv/bin/pip install -r requirements.txt
-          fi
-
       - name: Run xjmimotion
         working-directory: xjmimotion
-        run: .venv/bin/python main.py
+        run: python main.py
