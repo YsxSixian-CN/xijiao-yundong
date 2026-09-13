@@ -1,0 +1,54 @@
+name: Run Sport Bots Daily
+
+on:
+  schedule:
+    - cron: "0 12 * * *"
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install xjspobot dependencies
+        working-directory: xjspobot
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            .venv/bin/pip install -r requirements.txt
+          fi
+
+      - name: Run xjspobot for 1 hour
+        working-directory: xjspobot
+        run: |
+          set +e
+          timeout --signal=INT --kill-after=30s 1h .venv/bin/python sport_bot.py
+          code=$?
+          if [ "$code" -eq 124 ]; then
+            echo "xjspobot ran for 1 hour and was stopped as expected."
+            exit 0
+          fi
+          exit "$code"
+
+      - name: Install xjmimotion dependencies
+        working-directory: xjmimotion
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            .venv/bin/pip install -r requirements.txt
+          fi
+
+      - name: Run xjmimotion
+        working-directory: xjmimotion
+        run: .venv/bin/python main.py
